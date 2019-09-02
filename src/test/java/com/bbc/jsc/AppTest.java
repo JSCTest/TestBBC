@@ -7,10 +7,29 @@ import junit.framework.TestCase;
  * Unit test for simple App.
  */
 public class AppTest {
-    //test input to see if separated correctly
+
+    //test input to see if stored
     @Test
     public void testInput(){
+        String input = "    * http://www.bbc.co.uk/iplayer\n" +
+                "https://google.com\n" +
+                "bad://address\n" +
+                "http://www.bbc.co.uk/missing/thing\n" +
+                "http://not.exists.bbc.co.uk/\n" +
+                "http://www.oracle.com/technetwork/java/javase/downloads/index.html";
+        Assert.assertEquals(App.getInput(),input);
+    }
 
+    //test input to see if separated correctly
+    @Test
+    public void testInputLst(){
+        String[]input = {"    * http://www.bbc.co.uk/iplayer",
+                "https://google.com",
+                "bad://address",
+                "http://www.bbc.co.uk/missing/thing",
+                "http://not.exists.bbc.co.uk/",
+                "http://www.oracle.com/technetwork/java/javase/downloads/index.html"};
+        Assert.assertEquals(App.getInputLst(),input);
     }
 
     //test input to see if invalid input is spotted
