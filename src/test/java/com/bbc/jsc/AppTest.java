@@ -3,11 +3,6 @@ package com.bbc.jsc;
 import org.junit.*;
 import junit.framework.TestCase;
 
-import java.util.*;
-
-/**
- * Unit test for simple App.
- */
 public class AppTest {
 
     String input = "http://www.bbc.co.uk/iplayer\n" +
@@ -43,13 +38,19 @@ public class AppTest {
     //test input to see if invalid input is spotted
     @Test
     public void testInvalidInput(){
-
+        InputHandler handler =new InputHandler();
+        Assert.assertEquals(handler.isValid("bad://address"),false);
+        Assert.assertEquals(handler.isValid("http://not.exists.bbc.co.uk/"),false);
+        Assert.assertEquals(handler.isValid("https:// www.google.com"),false);
     }
 
     //test input to see if valid input is spotted
     @Test
     public void testValidInput(){
-
+        InputHandler handler =new InputHandler();
+        Assert.assertEquals(handler.isValid("https://google.com"),true);
+        Assert.assertEquals(handler.isValid("http://www.bbc.co.uk/iplayer"),true);
+        Assert.assertEquals(handler.isValid("http://www.oracle.com/technetwork/java/javase/downloads/index.html"),true);
     }
 
     //test input to see if slow/non-responsive requests are handled
