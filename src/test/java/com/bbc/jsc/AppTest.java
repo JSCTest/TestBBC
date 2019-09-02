@@ -38,19 +38,18 @@ public class AppTest {
     //test input to see if invalid input is spotted
     @Test
     public void testInvalidInput(){
-        InputHandler handler =new InputHandler();
-        Assert.assertEquals(handler.isValid("bad://address"),false);
-        Assert.assertEquals(handler.isValid("http://not.exists.bbc.co.uk/"),false);
-        Assert.assertEquals(handler.isValid("https:// www.google.com"),false);
+        InputHandler handler =new InputHandler(inLst);
+        Assert.assertEquals(false,handler.isURLValid("bad://address"));
+        Assert.assertEquals(false,handler.isURLValid("https:// www.google.com"));
     }
 
     //test input to see if valid input is spotted
     @Test
     public void testValidInput(){
-        InputHandler handler =new InputHandler();
-        Assert.assertEquals(handler.isValid("https://google.com"),true);
-        Assert.assertEquals(handler.isValid("http://www.bbc.co.uk/iplayer"),true);
-        Assert.assertEquals(handler.isValid("http://www.oracle.com/technetwork/java/javase/downloads/index.html"),true);
+        InputHandler handler =new InputHandler(inLst);
+        Assert.assertEquals(handler.isURLValid("https://google.com"),true);
+        Assert.assertEquals(handler.isURLValid("http://www.bbc.co.uk/iplayer"),true);
+        Assert.assertEquals(handler.isURLValid("http://www.oracle.com/technetwork/java/javase/downloads/index.html"),true);
     }
 
     //test input to see if slow/non-responsive requests are handled
