@@ -3,6 +3,10 @@ package com.bbc.jsc;
 import org.junit.*;
 import junit.framework.TestCase;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
+
 public class AppTest {
 
     String input = "http://www.bbc.co.uk/iplayer\n" +
@@ -61,6 +65,64 @@ public class AppTest {
     //test if properties from requests are recorded and are correct
     @Test
     public void testProperties(){
+        try {
+            //Connect to 1st URL
+            String url = "https://www.bbc.co.uk/iplayer";
+            URL link = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) link.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            //Get Properties
+            int code=connection.getResponseCode();
+            long conLength=connection.getContentLengthLong();
+            long date = connection.getDate();
+
+            //Get Property value from method
+            InputHandler handler =new InputHandler(inLst);
+            List<String>properties=handler.getProperties(url);
+
+            //Comparing values for the properties
+            Assert.assertEquals(url,properties.get(0));
+            Assert.assertEquals(true,Boolean.parseBoolean(properties.get(1)));
+            Assert.assertEquals(code,Integer.parseInt(properties.get(2)));
+            //Assert.assertEquals(conLength,Long.parseLong(properties.get(3)));
+            Assert.assertEquals(date,Long.parseLong(properties.get(4)));
+
+            //Connect to 2nd URL
+            url = "https://google.com";
+            link = new URL(url);
+            connection = (HttpURLConnection) link.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            //Get Properties
+            code=connection.getResponseCode();
+            conLength=connection.getContentLengthLong();
+            date = connection.getDate();
+
+            //Get Property value from method
+            properties=handler.getProperties(url);
+
+            //Comparing values for the properties
+            Assert.assertEquals(url,properties.get(0));
+            Assert.assertEquals(true,Boolean.parseBoolean(properties.get(1)));
+            Assert.assertEquals(code,Integer.parseInt(properties.get(2)));
+            //Assert.assertEquals(conLength,Long.parseLong(properties.get(3)));
+            Assert.assertEquals(date,Long.parseLong(properties.get(4)));
+
+            //Connect to 3rd URL
+            //Get Property value from method
+            properties=handler.getProperties("bad://address");
+
+            //Comparing values for the properties
+            Assert.assertEquals("bad://address",properties.get(0));
+            Assert.assertEquals(false,Boolean.parseBoolean(properties.get(1)));
+            Assert.assertEquals("Invalid URL",properties.get(2));
+
+        }catch(Exception e){
+            System.err.println("The URL is Invalid");
+        }
 
     }
 
