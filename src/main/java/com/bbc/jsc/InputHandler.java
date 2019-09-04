@@ -1,9 +1,5 @@
 package com.bbc.jsc;
 
-/**
- * Created by Jagjeet on 02/09/2019.
- */
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -14,10 +10,12 @@ import org.json.JSONObject;
 import org.json.JSONArray;
 
 public class InputHandler {
-    private String[]lstOfURLs;
-    private JSONArray URLlst=new JSONArray();
 
-    public InputHandler(String[]lstOfURLs){
+    //------------ INSTANCE VARIABLES -------------
+    private List<String>lstOfURLs=new LinkedList<>();
+    private JSONArray URLlst=new JSONArray();
+    
+    public InputHandler(List<String>lstOfURLs){
         this.lstOfURLs=lstOfURLs;
     }
 
