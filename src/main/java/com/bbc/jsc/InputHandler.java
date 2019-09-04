@@ -4,12 +4,18 @@ package com.bbc.jsc;
  * Created by Jagjeet on 02/09/2019.
  */
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
 
 import org.apache.commons.validator.*;
+
+import org.json.JSONObject;
+import org.json.JSONArray;
+
 public class InputHandler {
     private String[]lstOfURLs;
+    private JSONArray URLlst=new JSONArray();
 
     public InputHandler(String[]lstOfURLs){
         this.lstOfURLs=lstOfURLs;
@@ -18,13 +24,12 @@ public class InputHandler {
     public void createJSON(){
         for(String url:lstOfURLs){
             boolean valid = isURLValid(url);
-            List<String>lstOfProperties=new LinkedList<String>();
-            lstOfProperties.add(url);
-            lstOfProperties.add(String.valueOf(valid));
-            if(valid) lstOfProperties.addAll(getProperties(url));
-            else lstOfProperties.add("Invalid URL");
+            Map<String, String>lstOfProperties=new LinkedHashMap<String, String>();
+            if(valid) lstOfProperties.putAll(getProperties(url));
+            else lstOfProperties.put("Error","Invalid URL");
             toJSON(lstOfProperties);
         }
+        createJSONDocument();
     }
 
     public boolean isURLValid(String url){
@@ -34,27 +39,52 @@ public class InputHandler {
         return false;
     }
 
-    public List<String> getProperties(String url){
-        List<String>properties=new LinkedList<String>();
-        properties.add(url);
+    public Map<String,String> getProperties(String url){
+        Map<String, String>properties=new LinkedHashMap<String, String>();
+        properties.put("Url",url);
         try {
             URL link = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) link.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
-            properties.add("true");
-            properties.add(String.valueOf(connection.getResponseCode()));
-            properties.add(String.valueOf(connection.getContentLengthLong()));
-            properties.add(String.valueOf(connection.getDate()));
+            properties.put("Valid","true");
+            properties.put("Status_code",String.valueOf(connection.getResponseCode()));
+            properties.put("Content_length",String.valueOf(connection.getContentLengthLong()));
+            properties.put("Date",String.valueOf(connection.getDate()));
         }catch(Exception e){
             System.err.println("There seems to be a problem with the URL");
-            properties.add("false");
-            properties.add("Invalid URL");
+            properties.put("Valid","false");
+            properties.put("Error","Invalid URL");
         }
         return properties;
     }
 
-    public void toJSON(List<String>lstOfProperties){
+    public void toJSON(Map<String, String>lstOfProperties){
+        JSONObject jsonLink = new JSONObject();
+        if(lstOfProperties.size()>3) {
+            jsonLink.put("Url",lstOfProperties.get("Url"));
+            jsonLink.put("Status_code",lstOfProperties.get("Status_code"));
+            jsonLink.put("Content_length",lstOfProperties.get("Content_length"));
+            jsonLink.put("Date",lstOfProperties.get("Date"));
 
+        }else{
+            jsonLink.put("Url",lstOfProperties.get("Url"));
+            jsonLink.put("Error",lstOfProperties.get("Error"));
+        }
+        URLlst.put(jsonLink);
+    }
+
+    public void createJSONDocument(){
+        File file = new File("LinkProperties.json");
+        try(FileWriter writer = new FileWriter(file)){
+            writer.write(URLlst.toString(4));
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public JSONArray getURLlst(){
+        return URLlst;
     }
 }
