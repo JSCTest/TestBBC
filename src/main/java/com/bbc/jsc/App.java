@@ -7,6 +7,10 @@ public class App {
         userInput.UserGUI();
 
         InputHandler handler = new InputHandler(userInput.getInputLst());
-        handler.createJSON();
+
+        Document document=new DocumentFactory().getDocument(userInput.getDocType());
+        document.convert(handler.getURLData());
+
+        userInput.UserGUIClosing();
     }
 }

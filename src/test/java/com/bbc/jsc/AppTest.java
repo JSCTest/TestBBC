@@ -1,25 +1,12 @@
 package com.bbc.jsc;
 
 import org.junit.*;
-import junit.framework.TestCase;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.*;
 import java.util.*;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.apache.commons.io.FileUtils;
-
 public class AppTest {
-
-    private String input = "http://www.bbc.co.uk/iplayer\n" +
-                           "https://google.com\n" +
-                           "bad://address\n" +
-                           "http://www.bbc.co.uk/missing/thing\n" +
-                           "http://not.exists.bbc.co.uk/\n" +
-                           "http://www.oracle.com/technetwork/java/javase/downloads/index.html";
 
     private String[]inArray = {"http://www.bbc.co.uk/iplayer",
                                "https://google.com",
@@ -35,15 +22,7 @@ public class AppTest {
                                               "http://not.exists.bbc.co.uk/",
                                               "http://www.oracle.com/technetwork/java/javase/downloads/index.html");
 
-    //test input to see if stored
-    @Test
-    public void testInput(){
-        UserInput userInput = new UserInput();
-        userInput.setInput(input);
-        Assert.assertEquals(input,userInput.getInput());
-    }
-
-    //test input to see if separated correctly
+    // test user input to see if stored
     @Test
     public void testInputLst(){
         UserInput userInput = new UserInput();
@@ -55,35 +34,18 @@ public class AppTest {
     @Test
     public void testInvalidInput(){
         InputHandler handler =new InputHandler(inLst);
-        Assert.assertEquals(false,handler.isURLValid("bad://address"));
-        Assert.assertEquals(false,handler.isURLValid("https:// www.google.com"));
+        Assert.assertEquals(false,handler.getProperties("bad://address").getValid());
+        Assert.assertEquals(false,handler.getProperties("https:// www.google.com").getValid());
     }
 
     //test input to see if valid input is spotted
     @Test
     public void testValidInput(){
         InputHandler handler =new InputHandler(inLst);
-        Assert.assertEquals(handler.isURLValid("https://google.com"),true);
-        Assert.assertEquals(handler.isURLValid("http://www.bbc.co.uk/iplayer"),true);
-        Assert.assertEquals(handler.isURLValid("http://www.oracle.com/technetwork/java/javase/downloads/index.html"),true);
+        Assert.assertEquals(true,handler.getProperties("https://google.com").getValid());
+        Assert.assertEquals(true,handler.getProperties("http://www.bbc.co.uk/iplayer").getValid());
+        Assert.assertEquals(true,handler.getProperties("http://www.oracle.com/technetwork/java/javase/downloads/index.html").getValid());
     }
-
-
-
-
-
-    //test input to see if valid input is spotted
-    @Test
-    public void testMixedInput(){
-        InputHandler handler =new InputHandler(inLst);
-        Assert.assertEquals(handler.isURLValid("https://google.com"),true);
-        Assert.assertEquals(handler.isURLValid("http://www.bbc.co.uk/iplayer"),true);
-        Assert.assertEquals(handler.isURLValid("http://www.oracle.com/technetwork/java/javase/downloads/index.html"),true);
-    }
-
-
-
-
 
     //test input to see if slow/non-responsive requests are handled
     @Test
@@ -104,19 +66,17 @@ public class AppTest {
 
             //Get Properties
             int code=connection.getResponseCode();
-            long conLength=connection.getContentLengthLong();
-            long date = connection.getDate();
+            String date = new Date(connection.getDate()).toString();
 
             //Get Property value from method
             InputHandler handler =new InputHandler(inLst);
-            Map<String, String> properties=handler.getProperties(url);
+            URLObject properties=handler.getProperties(url);
 
             //Comparing values for the properties
-            Assert.assertEquals(url,properties.get("Url"));
-            Assert.assertEquals(true,Boolean.parseBoolean(properties.get("Valid")));
-            Assert.assertEquals(code,Integer.parseInt(properties.get("Status_code")));
-            //Assert.assertEquals(conLength,Long.parseLong(properties.get("Content_length")));
-            Assert.assertEquals(date,Long.parseLong(properties.get("Date")));
+            Assert.assertEquals(url,properties.getUrl());
+            Assert.assertEquals(true,properties.getValid());
+            Assert.assertEquals(code,properties.getStatusCode());
+            Assert.assertEquals(date,properties.getDate());
 
 
             //---------------- Connect to 2nd URL ----------------
@@ -128,18 +88,16 @@ public class AppTest {
 
             //Get Properties
             code=connection.getResponseCode();
-            conLength=connection.getContentLengthLong();
-            date = connection.getDate();
+            date = new Date(connection.getDate()).toString();
 
             //Get Property value from method
             properties=handler.getProperties(url);
 
             //Comparing values for the properties
-            Assert.assertEquals(url,properties.get("Url"));
-            Assert.assertEquals(true,Boolean.parseBoolean(properties.get("Valid")));
-            Assert.assertEquals(code,Integer.parseInt(properties.get("Status_code")));
-            //Assert.assertEquals(conLength,Long.parseLong(properties.get("Content_length")));
-            Assert.assertEquals(date,Long.parseLong(properties.get("Date")));
+            Assert.assertEquals(url,properties.getUrl());
+            Assert.assertEquals(true,properties.getValid());
+            Assert.assertEquals(code,properties.getStatusCode());
+            Assert.assertEquals(date,properties.getDate());
 
 
             //---------------- Connect to 3rd URL ----------------
@@ -147,9 +105,9 @@ public class AppTest {
             properties=handler.getProperties("bad://address");
 
             //Comparing values for the properties
-            Assert.assertEquals("bad://address",properties.get("Url"));
-            Assert.assertEquals(false,Boolean.parseBoolean(properties.get("Valid")));
-            Assert.assertEquals("Invalid URL",properties.get("Error"));
+            Assert.assertEquals("bad://address",properties.getUrl());
+            Assert.assertEquals(false,properties.getValid());
+            Assert.assertEquals("Invalid URL",properties.getError());
 
         }catch(Exception e){
             System.err.println("The URL is Invalid");
@@ -163,51 +121,58 @@ public class AppTest {
         //Get the data JSON file should contain
         List<String>links = Arrays.asList("https://www.bbc.co.uk/iplayer","https://google.com","bad://address");
         InputHandler handler =new InputHandler(links);
-        List<Map<String,String>>lstOfProperties=new LinkedList();
+        List<URLObject>lstOfProperties=new LinkedList<>();
         for(String url:links) {
-            Map<String, String> properties = handler.getProperties(url);
-            lstOfProperties.add(properties);
-            handler.toJSON(properties);
+            URLObject urlObject = handler.getProperties(url);
+            lstOfProperties.add(urlObject);
+        }
+
+        //test to make sure file doesn't exist yet
+        File file = new File("LinkProperties.json");
+        file.delete();
+        Assert.assertEquals(false,file.exists());
+
+        //Create the JSON Document
+        JSONDocument jsonDocument=new JSONDocument();
+        jsonDocument.convert(lstOfProperties);
+
+        //test to see if file has been created
+        Assert.assertEquals(true,file.exists());
+    }
+
+    //test to see if json file exists
+    @Test
+    public void testJSONRead(){
+        //Get the data JSON file should contain
+        List<String>links = Arrays.asList("https://www.bbc.co.uk/iplayer","https://google.com","bad://address");
+        InputHandler handler =new InputHandler(links);
+        List<URLObject>lstOfProperties=new LinkedList<>();
+        for(String url:links) {
+            URLObject urlObject = handler.getProperties(url);
+            lstOfProperties.add(urlObject);
         }
 
         //Create the JSON Document
-        handler.createJSONDocument();
+        Document jsonDocument=new JSONDocument();
+        jsonDocument.convert(lstOfProperties);
+        List<URLObject>lstOfJSONLinks= (new JSONDocument()).read();
 
         //Check if the file has been created
         File file = new File("LinkProperties.json");
         Assert.assertEquals(true,file.exists());
 
-        //Retrieve data from JSON file
-        String content="";
-        JSONArray URLList=new JSONArray();
-        try{
-            content = FileUtils.readFileToString(file, "utf-8");
-            URLList = new JSONArray(content);
-        } catch (Exception e){
-            System.err.println("The File does not exist");
-            e.printStackTrace();
-        }
-
         //Check if data from JSON file matches the actual data
         for (int i=0;i<lstOfProperties.size();i++){
-            if(((JSONObject)URLList.get(i)).length()>3){
-                String link=((JSONObject)URLList.get(i)).get("Url").toString();
-                String statusCode=((JSONObject)URLList.get(i)).get("Status_code").toString();
-                String Content_length=((JSONObject)URLList.get(i)).get("Content_length").toString();
-                String date=((JSONObject)URLList.get(i)).get("Date").toString();
-
+            if(lstOfProperties.get(i).getValid()){
                 //Comparing values for the properties
-                Assert.assertEquals(lstOfProperties.get(i).get("Url"),link);
-                Assert.assertEquals(lstOfProperties.get(i).get("Status_code"),statusCode);
-                Assert.assertEquals(lstOfProperties.get(i).get("Content_length"),Content_length);
-                Assert.assertEquals(lstOfProperties.get(i).get("Date"),date);
+                Assert.assertEquals(lstOfProperties.get(i).getUrl(),lstOfJSONLinks.get(i).getUrl());
+                Assert.assertEquals(lstOfProperties.get(i).getStatusCode(),lstOfJSONLinks.get(i).getStatusCode());
+                Assert.assertEquals(lstOfProperties.get(i).getContentLength(),lstOfJSONLinks.get(i).getContentLength());
+                Assert.assertEquals(lstOfProperties.get(i).getDate(),lstOfJSONLinks.get(i).getDate());
             }else{
-                String link=((JSONObject)URLList.get(i)).get("Url").toString();
-                String error=((JSONObject)URLList.get(i)).get("Error").toString();
-
                 //Comparing values for the properties
-                Assert.assertEquals(lstOfProperties.get(i).get("Url"),link);
-                Assert.assertEquals(lstOfProperties.get(i).get("Error"),error);
+                Assert.assertEquals(lstOfProperties.get(i).getUrl(),lstOfJSONLinks.get(i).getUrl());
+                Assert.assertEquals(lstOfProperties.get(i).getError(),lstOfJSONLinks.get(i).getError());
             }
         }
     }
