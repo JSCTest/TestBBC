@@ -6,4 +6,5 @@ public interface Document {
     public void convert(List<URLObject>lstOfURLData);
     public List<URLObject> read();
     public void print();
+    public void printLink();
 }

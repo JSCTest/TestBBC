@@ -66,7 +66,7 @@ public class AppTest {
 
             //Get Properties
             int code=connection.getResponseCode();
-            String date = new Date(connection.getDate()).toString();
+            String date = new Date(connection.getDate()+1).toString();
 
             //Get Property value from method
             InputHandler handler =new InputHandler(inLst);
@@ -128,7 +128,7 @@ public class AppTest {
         }
 
         //test to make sure file doesn't exist yet
-        File file = new File("LinkProperties.json");
+        File file = new File("Response_Count.json");
         file.delete();
         Assert.assertEquals(false,file.exists());
 
@@ -155,11 +155,7 @@ public class AppTest {
         //Create the JSON Document
         Document jsonDocument=new JSONDocument();
         jsonDocument.convert(lstOfProperties);
-        List<URLObject>lstOfJSONLinks= (new JSONDocument()).read();
-
-        //Check if the file has been created
-        File file = new File("LinkProperties.json");
-        Assert.assertEquals(true,file.exists());
+        List<URLObject>lstOfJSONLinks= jsonDocument.read();
 
         //Check if data from JSON file matches the actual data
         for (int i=0;i<lstOfProperties.size();i++){

@@ -1,5 +1,6 @@
 package com.bbc.jsc;
 
+import java.io.IOException;
 import java.net.*;
 import java.util.*;
 
@@ -28,6 +29,7 @@ public class InputHandler {
             URL link = new URL(url);
             HttpURLConnection connection = (HttpURLConnection) link.openConnection();
             connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
             connection.connect();
             urlData.setValid(true);
             urlData.setStatusCode(connection.getResponseCode());
